@@ -1,0 +1,37 @@
+#!/bin/bash
+# Commit-msg hook (portable meta-process template)
+# Enforces plan references in commit messages.
+
+COMMIT_MSG_FILE="$1"
+FIRST_LINE=$(head -n1 "$COMMIT_MSG_FILE")
+
+# Allow merge commits
+if [[ "$FIRST_LINE" =~ ^Merge ]]; then
+    exit 0
+fi
+
+# Allow fixup/squash commits
+if [[ "$FIRST_LINE" =~ ^(fixup!|squash!) ]]; then
+    exit 0
+fi
+
+# Check for plan reference: [Plan #N]
+if [[ "$FIRST_LINE" =~ ^\[Plan\ \#[0-9]+\] ]]; then
+    exit 0
+fi
+
+# Allow [Trivial] for small changes
+if [[ "$FIRST_LINE" =~ ^\[Trivial\] ]]; then
+    exit 0
+fi
+
+# Reject commits without plan reference
+echo ""
+echo "ERROR: Commit message must start with [Plan #N] or [Trivial]"
+echo ""
+echo "  [Plan #N] Description   - for planned work"
+echo "  [Trivial] Description   - for small fixes (<20 lines, no src/ changes)"
+echo ""
+echo "See docs/plans/TEMPLATE.md for plan format."
+echo ""
+exit 1
